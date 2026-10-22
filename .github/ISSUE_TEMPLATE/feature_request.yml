@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest an improvement or a new platform / mode
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      placeholder: I want to use this from macOS / iOS, or I want notifications when a task finishes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Suggested approach (optional)
+      description: Sketches, alternatives, or which existing script you would change.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Android app (WebView shell)
+        - PWA / proxy
+        - Build pipeline
+        - Windows scripts (autostart, supervisor, modes)
+        - Documentation
+        - Portability / other platform
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I read the README and docs, and this is not already supported
+          required: true

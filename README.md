@@ -1,5 +1,8 @@
 # dsh-mobile
 
+[![build](https://github.com/tirckman/dsh-mobile/actions/workflows/build.yml/badge.svg)](https://github.com/tirckman/dsh-mobile/actions/workflows/build.yml)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 把桌面端的 **DeepSeek Harness** 变成手机上的 App：Tailscale 内网直连、WebView 原生外壳、开机自启、断线自恢复。
 
 > 非官方项目，与 DeepSeek 官方无关。它是你自己电脑上 dsh 的一个客户端外壳。
@@ -75,6 +78,13 @@ adb install -r dist\DSH-Mobile.apk
 
 （不想装 APK 也行：用手机 Chrome 打开 `https://<host>/`，登录后菜单里"安装应用"即可装成 PWA。）
 
+**可选：让 CI 帮你构建 APK**
+
+仓库自带 GitHub Actions（Windows runner）。Fork 之后在 *Settings → Variables* 里加一个
+`DEFAULT_HOST` = 你的主机名，之后每次 push 都会自动构建并上传 `DSH-Mobile-apk` 产物；也可以用
+*Actions → build → Run workflow* 临时指定 host。想要固定签名，再加一个
+`ANDROID_KEYSTORE_BASE64` secret。细节见 [docs/android-build.md](docs/android-build.md#用-github-actions-构建)。
+
 **5. 装开机自启**
 
 ```powershell
@@ -135,6 +145,8 @@ dsh-mobile/
 - 登录 token 是**操作你电脑的凭证**，等同于网页端的会话；别贴到公开地方。
 - `tailscale serve` 默认只在 tailnet 内可达。**不要**改用 `tailscale funnel`（那会暴露到公网）。
 - 图标是本项目自绘的 "DSH" 字样，不包含 DeepSeek 官方 logo。
+
+安全问题请走仓库的 **Security → Report a vulnerability**，范围与威胁模型见 [SECURITY.md](SECURITY.md)。
 
 ## 已知限制
 

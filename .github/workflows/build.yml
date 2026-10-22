@@ -1,0 +1,143 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      host:
+        description: "Hostname baked into the APK (your Tailscale MagicDNS name)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  checks:
+    name: static checks
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Check proxy syntax
+        shell: pwsh
+        run: node --check proxy/pwa-proxy.js
+
+      - name: Check PowerShell syntax
+        shell: pwsh
+        run: |
+          $failed = $false
+          Get-ChildItem -Recurse -Filter *.ps1 | ForEach-Object {
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$null, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) {
+              Write-Host "::error file=$($_.FullName)::$($errors[0].Message)"
+              $failed = $true
+            }
+          }
+          if ($failed) { exit 1 }
+          Write-Host "all PowerShell files parse cleanly"
+
+      - name: Check icons exist
+        shell: pwsh
+        run: |
+          $required = @(
+            "proxy/icons/icon-192.png",
+            "proxy/icons/icon-512.png",
+            "proxy/icons/maskable-512.png",
+            "android/res/mipmap-xxxhdpi/ic_launcher.png"
+          )
+          foreach ($f in $required) {
+            if (-not (Test-Path $f)) { Write-Host "::error::missing $f"; exit 1 }
+          }
+          Write-Host "icons ok"
+
+  build-apk:
+    name: build APK
+    needs: checks
+    runs-on: windows-latest
+    env:
+      BUILD_ROOT: C:\dsh-apk-build
+      KEYSTORE_DIR: C:\dsh-keystore
+      DEFAULT_HOST: ${{ vars.DEFAULT_HOST }}
+      INPUT_HOST: ${{ inputs.host }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Android toolchain
+        uses: actions/cache@v4
+        with:
+          path: C:\dsh-apk-build
+          key: android-toolchain-${{ runner.os }}-jdk17-bt35-platform35-v1
+
+      - name: Write config/settings.json
+        shell: pwsh
+        run: |
+          $hostValue = $env:INPUT_HOST
+          if ([string]::IsNullOrWhiteSpace($hostValue)) { $hostValue = $env:DEFAULT_HOST }
+          if ([string]::IsNullOrWhiteSpace($hostValue)) { $hostValue = "dsh.example.com" }
+          Write-Host "host baked into APK: $hostValue"
+
+          $cfg = Get-Content config/settings.example.json -Raw | ConvertFrom-Json
+          $cfg.host = $hostValue
+          $cfg.buildRoot = $env:BUILD_ROOT
+          $cfg.keystorePath = Join-Path $env:KEYSTORE_DIR "dsh-mobile.keystore"
+          $cfg.keystorePass = "ci-placeholder"
+          $text = $cfg | ConvertTo-Json -Depth 5
+          # no BOM: javac rejects a leading U+FEFF in generated sources
+          [System.IO.File]::WriteAllText("$PWD/config/settings.json", $text, (New-Object System.Text.UTF8Encoding($false)))
+
+      - name: Restore signing key (optional secret)
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path $env:KEYSTORE_DIR | Out-Null
+          [System.IO.File]::WriteAllBytes(
+            (Join-Path $env:KEYSTORE_DIR "dsh-mobile.keystore"),
+            [Convert]::FromBase64String("${{ secrets.ANDROID_KEYSTORE_BASE64 }}")
+          )
+          Write-Host "restored keystore from ANDROID_KEYSTORE_BASE64"
+
+      - name: Install toolchain
+        shell: pwsh
+        run: .\build\setup-toolchain.ps1 -BuildRoot $env:BUILD_ROOT
+
+      - name: Build APK
+        shell: pwsh
+        run: .\build\build-apk.ps1
+
+      - name: Show APK metadata
+        shell: pwsh
+        run: |
+          $aapt2 = Get-ChildItem $env:BUILD_ROOT -Filter aapt2.exe -Recurse |
+            Where-Object { $_.FullName -notmatch '\\lib\\' } | Select-Object -First 1
+          & $aapt2.FullName dump badging dist/DSH-Mobile.apk | Select-Object -First 3
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DSH-Mobile-apk
+          path: dist/DSH-Mobile.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Attach APK to release (tag builds)
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          gh release view $tag 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag dist/DSH-Mobile.apk --title $tag --notes "Automated build for $tag."
+          } else {
+            gh release upload $tag dist/DSH-Mobile.apk --clobber
+          }

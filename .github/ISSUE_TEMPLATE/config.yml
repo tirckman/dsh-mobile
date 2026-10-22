@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Troubleshooting guide
+    url: https://github.com/tirckman/dsh-mobile/blob/main/docs/troubleshooting.md
+    about: Connection, sign-in, 403, build and autostart problems are usually covered here.
+  - name: Tailscale / Serve setup
+    url: https://github.com/tirckman/dsh-mobile/blob/main/docs/setup-tailscale.md
+    about: Check this first if the phone cannot reach the desktop at all.

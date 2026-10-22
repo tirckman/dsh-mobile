@@ -1,0 +1,84 @@
+name: Bug report
+description: Something is not working (connection, sign-in, build, autostart, ...)
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. **Do not paste your launch URL or token** - redact `?token=...`.
+        Run `scripts\status.cmd` and share only the parts that matter.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected vs what actually happened.
+      placeholder: |
+        Expected: phone opens the chat UI.
+        Actual: "Cannot reach the desktop" page.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. start the stack with scripts\install-autostart.cmd
+        2. open the DSH app on the phone
+        3. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Which part fails?
+      options:
+        - Phone cannot reach the desktop (VPN / Tailscale)
+        - Reaches the desktop but stuck at sign-in (401 / token)
+        - 403 or blank page / Host-Origin
+        - APK build fails
+        - Autostart or supervisor
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: status
+    attributes:
+      label: Output of scripts\status.cmd
+      description: Redact your hostname if you prefer, but keep the status codes and ports.
+      render: text
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      value: |
+        - Windows version:
+        - Phone model / Android / ROM:
+        - DeepSeek Harness version:
+        - Tailscale version (Windows / phone):
+        - Access mode: Tailscale / LAN / USB
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: From %LOCALAPPDATA%\dsh-mobile\logs\. Remove any `?token=...` value.
+      render: text
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I read docs/troubleshooting.md
+          required: true
+        - label: I removed tokens, hostnames and other secrets from this report
+          required: true
+        - label: I searched existing issues for the same problem
+          required: true

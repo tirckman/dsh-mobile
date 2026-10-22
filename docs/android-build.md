@@ -72,6 +72,35 @@ python android\make-icons.py
 
 > 发布衍生作品时请使用自己的图形，不要直接分发他人商标（包括 DeepSeek 的 logo）。
 
+## 用 GitHub Actions 构建
+
+仓库自带 [`.github/workflows/build.yml`](../.github/workflows/build.yml)，在 `windows-latest` 上跑完整流水线：
+
+```
+static checks (node --check / PowerShell 解析 / 图标存在)
+        │
+        ▼
+build APK (缓存工具链 → 生成 config/settings.json → setup-toolchain → build-apk → 上传 artifact)
+```
+
+触发方式与配置：
+
+| 场景 | 做法 |
+|---|---|
+| 每次 push / PR | 自动跑，产物在 Actions 页面的 `DSH-Mobile-apk` |
+| 手动指定 host | *Actions → build → Run workflow*，填 `host` |
+| Fork 后固定自己的 host | *Settings → Secrets and variables → Actions → Variables* 新增 `DEFAULT_HOST` |
+| 固定签名 | 加 secret `ANDROID_KEYSTORE_BASE64`（keystore 的 base64），否则每次构建用临时密钥 |
+| 打 tag 发版 | `git tag v1.2.0 && git push --tags`，自动建 release 并附上 APK |
+
+生成 `ANDROID_KEYSTORE_BASE64`：
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\dsh-apk-build\dsh-mobile.keystore"))
+```
+
+注意：CI 产物里的 host 是构建时注入的，用户拿到的 artifact 只有重新用**自己的 host** 构建才能连上自己的机器。所以这个 workflow 主要面向 fork 用户，不是给最终用户下载的通用安装包。
+
 ## 5. 改行为
 
 | 想改什么 | 改哪里 |
