@@ -1,4 +1,4 @@
-name: build
+﻿name: build
 
 on:
   push:
@@ -20,9 +20,9 @@ jobs:
     name: static checks
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: "20"
 
@@ -69,7 +69,7 @@ jobs:
       DEFAULT_HOST: ${{ vars.DEFAULT_HOST }}
       INPUT_HOST: ${{ inputs.host }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Cache Android toolchain
         uses: actions/cache@v4
