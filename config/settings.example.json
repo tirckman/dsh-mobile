@@ -1,0 +1,26 @@
+{
+  "_comment": "Copy this file to config/settings.json and fill in your own values. config/settings.json is gitignored.",
+
+  "host": "your-desktop.your-tailnet.ts.net",
+  "webPort": 3081,
+  "pwaPort": 3082,
+  "servePort": 443,
+
+  "dshCli": "%LOCALAPPDATA%\\Programs\\DeepSeek Harness\\resources\\runtime\\cli\\bin\\dsh.cmd",
+  "nodeExe": "%USERPROFILE%\\.dsh\\dsh-runtimes\\dsh-primary-runtime\\dependencies\\node\\bin\\node.exe",
+  "tailscaleExe": "C:\\Program Files\\Tailscale\\tailscale.exe",
+  "adbExe": "adb",
+
+  "androidPackage": "com.deepseek.harness.mobile",
+  "buildRoot": "C:\\dsh-apk-build",
+  "keystorePath": "C:\\dsh-apk-build\\dsh-mobile.keystore",
+  "keystoreAlias": "dsh",
+  "keystorePass": "dshmobile",
+  "androidJdk": "",
+  "androidBuildTools": "",
+  "androidJar": "",
+
+  "lanBind": "",
+  "usbWebPort": 3081,
+  "logDir": "%LOCALAPPDATA%\\dsh-mobile\\logs"
+}

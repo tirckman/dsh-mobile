@@ -1,0 +1,24 @@
+# --- local configuration (never commit) ---
+config/settings.json
+android/src/com/deepseek/harness/mobile/AppConfig.java
+
+# --- build output ---
+dist/
+build/work/
+*.apk
+*.keystore
+*.jks
+*.idsig
+
+# --- runtime ---
+logs/
+*.log
+.tmp/
+
+# --- os / editor ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
