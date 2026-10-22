@@ -67,20 +67,23 @@ if (-not $haveJar) {
 }
 
 # --- report --------------------------------------------------------------
-$jdk = (Get-ChildItem $BuildRoot -Directory | Where-Object { $_.Name -like "jdk-*" } | Select-Object -First 1).FullName
+$jdkDir = (Get-ChildItem $BuildRoot -Directory | Where-Object { $_.Name -like "jdk-*" } | Select-Object -First 1).FullName
 $aapt2 = (Get-ChildItem $BuildRoot -Filter aapt2.exe -Recurse | Where-Object { $_.FullName -notmatch '\\lib\\' } | Select-Object -First 1).FullName
-$jar = (Get-ChildItem $BuildRoot -Filter android.jar -Recurse | Select-Object -First 1).FullName
+$buildToolsDir = Split-Path -Parent $aapt2
+$androidJar = (Get-ChildItem $BuildRoot -Filter android.jar -Recurse | Select-Object -First 1).FullName
 
 Write-Host ""
 Write-Host "toolchain ready:"
-Write-Host "  jdk         : $jdk"
-Write-Host "  build-tools : $(Split-Path -Parent $aapt2)"
-Write-Host "  android.jar : $jar"
+Write-Host "  jdk         : $jdkDir"
+Write-Host "  build-tools : $buildToolsDir"
+Write-Host "  android.jar : $androidJar"
 Write-Host ""
-Write-Host "Put these into config/settings.json (or leave the auto-detection alone):"
-Write-Host "  `"androidJdk`": `"$($jdk -replace '\\','\\\\')`","
-Write-Host "  `"androidBuildTools`": `"$(Split-Path -Parent $aapt2 -replace '\\','\\\\')`","
-Write-Host "  `"androidJar`": `"$($jar -replace '\\','\\\\')`","
-Write-Host "  `"buildRoot`": `"$($BuildRoot -replace '\\','\\\\')`","
+Write-Host "Add these to config/settings.json (or keep the auto-detection):"
+Write-Host ([ordered]@{
+    buildRoot         = $BuildRoot
+    androidJdk        = $jdkDir
+    androidBuildTools = $buildToolsDir
+    androidJar        = $androidJar
+} | ConvertTo-Json)
 Write-Host ""
 Write-Host "Next: powershell -ExecutionPolicy Bypass -File build\build-apk.ps1"
