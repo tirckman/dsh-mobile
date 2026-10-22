@@ -95,13 +95,19 @@ jobs:
           [System.IO.File]::WriteAllText("$PWD/config/settings.json", $text, (New-Object System.Text.UTF8Encoding($false)))
 
       - name: Restore signing key (optional secret)
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
         shell: pwsh
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
+          # NOTE: secrets are not allowed in `if:`, so the check lives here.
+          if ([string]::IsNullOrWhiteSpace($env:ANDROID_KEYSTORE_BASE64)) {
+            Write-Host "no ANDROID_KEYSTORE_BASE64 secret - the build will generate a throwaway key"
+            exit 0
+          }
           New-Item -ItemType Directory -Force -Path $env:KEYSTORE_DIR | Out-Null
           [System.IO.File]::WriteAllBytes(
             (Join-Path $env:KEYSTORE_DIR "dsh-mobile.keystore"),
-            [Convert]::FromBase64String("${{ secrets.ANDROID_KEYSTORE_BASE64 }}")
+            [Convert]::FromBase64String($env:ANDROID_KEYSTORE_BASE64)
           )
           Write-Host "restored keystore from ANDROID_KEYSTORE_BASE64"
 
